@@ -86,14 +86,69 @@ const flappyBird = {
     }
 };
 
+const messageGetReady = {
+    sX: 134,
+    sY: 0,
+    w: 174,
+    h: 152,
+    x: (canvas.width / 2) - 174 / 2,
+    y: 50,
+    draw(){
+        context.drawImage(
+            sprites,
+            messageGetReady.sX, messageGetReady.sY, 
+            messageGetReady.w, messageGetReady.h, 
+            messageGetReady.x, messageGetReady.y,
+            messageGetReady.w, messageGetReady.h,
+        );
+    }
+};
+
+let activeScreen = {};
+
+function changeScreen(newScreen){
+    activeScreen = newScreen;
+}
+
+const Screens = {
+    START: {
+        draw(){
+            background.draw();
+            ground.draw();
+            flappyBird.draw();
+            messageGetReady.draw();
+        },
+        click(){
+            changeScreen(Screens.GAME);
+        },
+        update(){}
+    }
+};
+
+Screens.GAME = {
+    draw(){
+        background.draw();
+        ground.draw();
+        flappyBird.draw();
+    },
+    update(){
+        flappyBird.update();
+    }
+};
+
 function loop(){
-    flappyBird.update();
-    background.draw();
-    ground.draw();
-    flappyBird.draw();
     
+    activeScreen.draw();
+    activeScreen.update();
 
     requestAnimationFrame(loop);
 }
 
+window.addEventListener('click', function(){
+    if(activeScreen.click){
+        activeScreen.click();
+    }
+});
+
+changeScreen(Screens.START);
 loop();
