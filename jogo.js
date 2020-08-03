@@ -1,5 +1,4 @@
-console.log('[Dev Soutinho] Flappy Bird');
-
+let frames = 0;
 const hit_sound = new Audio();
 hit_sound.src = './efeitos/hit.wav';
 
@@ -38,31 +37,42 @@ const background = {
     }
 };
 
-const ground = {
-    spriteX: 0,
-    spriteY: 610,
-    width: 224,
-    height: 112,
-    x: 0,
-    y: canvas.height - 112,
-    draw(){
-        context.drawImage(
-            sprites,
-            ground.spriteX, ground.spriteY, //spriteX e SpriteY
-            ground.width, ground.height, // Tamanho do recorte do Sprite
-            (ground.x + ground.width), ground.y,
-            ground.width, ground.height,
-        );
-        
-        context.drawImage(
-            sprites,
-            ground.spriteX, ground.spriteY, //spriteX e SpriteY
-            ground.width, ground.height, // Tamanho do recorte do Sprite
-            ground.x, ground.y,
-            ground.width, ground.height,
-        );
+function createGround(){
+    const ground = {
+        spriteX: 0,
+        spriteY: 610,
+        width: 224,
+        height: 112,
+        x: 0,
+        y: canvas.height - 112,
+        update(){
+            const groundMoviment = 1;
+            const repeat = ground.width / 2;
+            const moviment = ground.x - groundMoviment;
+
+            ground.x = moviment % repeat;
+        },
+        draw(){
+            context.drawImage(
+                sprites,
+                ground.spriteX, ground.spriteY, //spriteX e SpriteY
+                ground.width, ground.height, // Tamanho do recorte do Sprite
+                (ground.x + ground.width), ground.y,
+                ground.width, ground.height,
+            );
+            
+            context.drawImage(
+                sprites,
+                ground.spriteX, ground.spriteY, //spriteX e SpriteY
+                ground.width, ground.height, // Tamanho do recorte do Sprite
+                ground.x, ground.y,
+                ground.width, ground.height,
+            );
+        }
     }
-};
+
+    return ground;
+}
 
 function makeCollision(flappyBird, ground){
     const flappyBirdY = flappyBird.y + flappyBird.height;
@@ -91,7 +101,7 @@ function createFlappyBird(){
         gravity: 0.25,
         velocity: 0,
         update(){
-            if(makeCollision(flappyBird, ground)){
+            if(makeCollision(flappyBird, globais.ground)){
                 hit_sound.play();
                 setTimeout(() => {
                     changeScreen(Screens.START);
@@ -102,10 +112,30 @@ function createFlappyBird(){
             console.log(flappyBird.velocity)
             flappyBird.y = flappyBird.y + flappyBird.velocity;
         },
+        moviment: [
+            { spriteX: 0, spriteY: 0 },
+            { spriteX: 0, spriteY: 26 },
+            { spriteX: 0, spriteY: 52 },
+        ],
+        atualFrame: 0,
+        updateAtualFrame(){
+            const frameIntervals = 10;
+
+            const passedIntervals = frames % frameIntervals === 0;
+            if(passedIntervals){
+                const incrementBase = 1;
+                const increment = incrementBase + flappyBird.atualFrame;
+                const repeatBase = flappyBird.moviment.length;
+                flappyBird.atualFrame = increment % repeatBase;
+            }
+            
+        },
         draw(){
+            flappyBird.updateAtualFrame();
+            const { spriteX, spriteY } = flappyBird.moviment[flappyBird.atualFrame];
             context.drawImage(
                 sprites,
-                flappyBird.spriteX, flappyBird.spriteY, //spriteX e SpriteY
+                spriteX, spriteY, //spriteX e SpriteY
                 flappyBird.width, flappyBird.height, // Tamanho do recorte do Sprite
                 flappyBird.x, flappyBird.y,
                 flappyBird.width, flappyBird.height,
@@ -151,25 +181,27 @@ const Screens = {
     START: {
         init(){
             globais.flappyBird = createFlappyBird();
-            console.log(globais.flappyBird)
+            globais.ground = createGround();
         },
         draw(){
             background.draw();
-            ground.draw();
+            globais.ground.draw();
             messageGetReady.draw();
             globais.flappyBird.draw();
         },
         click(){
             changeScreen(Screens.GAME);
         },
-        update(){}
+        update(){
+            globais.ground.update();
+        }
     }
 };
 
 Screens.GAME = {
     draw(){
         background.draw();
-        ground.draw();
+        globais.ground.draw();
         globais.flappyBird.draw();
     },
     click(){
@@ -185,6 +217,7 @@ function loop(){
     activeScreen.draw();
     activeScreen.update();
 
+    frames = frames + 1;
     requestAnimationFrame(loop);
 }
 
