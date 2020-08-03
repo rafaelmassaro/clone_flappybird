@@ -1,5 +1,8 @@
 console.log('[Dev Soutinho] Flappy Bird');
 
+const hit_sound = new Audio();
+hit_sound.src = './efeitos/hit.wav';
+
 const sprites = new Image();
 sprites.src = './sprites.png';
 
@@ -61,30 +64,59 @@ const ground = {
     }
 };
 
-const flappyBird = {
-    spriteX: 0,
-    spriteY: 0,
-    width: 33,
-    height: 24,
-    x: 10,
-    y: 50,
-    gravity: 0.25,
-    velocity: 0,
-    update(){
-        flappyBird.velocity = flappyBird.velocity + flappyBird.gravity,
-        console.log(flappyBird.velocity)
-        flappyBird.y = flappyBird.y + flappyBird.velocity;
-    },
-    draw(){
-        context.drawImage(
-            sprites,
-            flappyBird.spriteX, flappyBird.spriteY, //spriteX e SpriteY
-            flappyBird.width, flappyBird.height, // Tamanho do recorte do Sprite
-            flappyBird.x, flappyBird.y,
-            flappyBird.width, flappyBird.height,
-        );
+function makeCollision(flappyBird, ground){
+    const flappyBirdY = flappyBird.y + flappyBird.height;
+    const groundY = ground.y;
+
+    if(flappyBirdY >= groundY){
+        return true;
     }
-};
+
+    return false;
+}
+
+function createFlappyBird(){
+
+    const flappyBird = {
+        spriteX: 0,
+        spriteY: 0,
+        width: 33,
+        height: 24,
+        x: 10,
+        y: 50,
+        jumpForce: 4.6,
+        jump(){
+            flappyBird.velocity = -flappyBird.jumpForce;
+        },
+        gravity: 0.25,
+        velocity: 0,
+        update(){
+            if(makeCollision(flappyBird, ground)){
+                hit_sound.play();
+                setTimeout(() => {
+                    changeScreen(Screens.START);
+                }, 500)
+                return;
+            }
+            flappyBird.velocity = flappyBird.velocity + flappyBird.gravity,
+            console.log(flappyBird.velocity)
+            flappyBird.y = flappyBird.y + flappyBird.velocity;
+        },
+        draw(){
+            context.drawImage(
+                sprites,
+                flappyBird.spriteX, flappyBird.spriteY, //spriteX e SpriteY
+                flappyBird.width, flappyBird.height, // Tamanho do recorte do Sprite
+                flappyBird.x, flappyBird.y,
+                flappyBird.width, flappyBird.height,
+            );
+        }
+    }
+
+    return flappyBird;
+}
+
+
 
 const messageGetReady = {
     sX: 134,
@@ -104,19 +136,28 @@ const messageGetReady = {
     }
 };
 
+const globais = {};
 let activeScreen = {};
 
 function changeScreen(newScreen){
     activeScreen = newScreen;
+
+    if(activeScreen.init){
+        activeScreen.init();
+    }
 }
 
 const Screens = {
     START: {
+        init(){
+            globais.flappyBird = createFlappyBird();
+            console.log(globais.flappyBird)
+        },
         draw(){
             background.draw();
             ground.draw();
-            flappyBird.draw();
             messageGetReady.draw();
+            globais.flappyBird.draw();
         },
         click(){
             changeScreen(Screens.GAME);
@@ -129,10 +170,13 @@ Screens.GAME = {
     draw(){
         background.draw();
         ground.draw();
-        flappyBird.draw();
+        globais.flappyBird.draw();
+    },
+    click(){
+        globais.flappyBird.jump();
     },
     update(){
-        flappyBird.update();
+        globais.flappyBird.update();
     }
 };
 
