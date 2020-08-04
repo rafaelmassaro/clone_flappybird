@@ -166,6 +166,74 @@ const messageGetReady = {
     }
 };
 
+function createPipes(){
+    const pipes = {
+        width: 52,
+        height: 400,
+        ground: {
+            spriteX: 0,
+            spriteY: 169,
+        },
+        sky: {
+            spriteX: 52,
+            spriteY: 169,
+        },
+        space: 80,
+        draw(){
+            
+            pipes.pairs.forEach(function(pair){
+                
+                const yRandom = pair.y;
+                const spaceBetweemPipes = 90;
+    
+                const pipeSkyX = pair.x;
+                const pipeSkyY = yRandom;
+                
+                context.drawImage(
+                    sprites,
+                    pipes.sky.spriteX, pipes.sky.spriteY,
+                    pipes.width, pipes.height,
+                    pipeSkyX, pipeSkyY,
+                    pipes.width, pipes.height,
+                );
+    
+    
+                const pipeGroundX = pair.x;
+                const pipeGroundY = pipes.height + spaceBetweemPipes + yRandom;
+    
+                context.drawImage(
+                    sprites,
+                    pipes.ground.spriteX, pipes.ground.spriteY,
+                    pipes.width, pipes.height,
+                    pipeGroundX, pipeGroundY,
+                    pipes.width, pipes.height,
+                );
+            });
+        },
+        pairs: [],
+        update(){
+            const pass100frames = frames % 100 === 0;
+
+            if(pass100frames){
+                pipes.pairs.push({
+                    x: canvas.width,
+                    y: -150 * (Math.random() + 1),
+                });
+            }
+
+            pipes.pairs.forEach(function(pair){
+                pair.x = pair.x - 2;
+
+                if(pair.x + pipes.width <= 0){
+                    pipes.pairs.shift();
+                }
+            });
+        }
+    }
+
+    return pipes;
+};
+
 const globais = {};
 let activeScreen = {};
 
@@ -182,18 +250,21 @@ const Screens = {
         init(){
             globais.flappyBird = createFlappyBird();
             globais.ground = createGround();
+            globais.pipes = createPipes();
         },
         draw(){
             background.draw();
-            globais.ground.draw();
-            messageGetReady.draw();
+            //messageGetReady.draw();
             globais.flappyBird.draw();
+            globais.pipes.draw();
+            globais.ground.draw();
         },
         click(){
             changeScreen(Screens.GAME);
         },
         update(){
             globais.ground.update();
+            globais.pipes.update();
         }
     }
 };
