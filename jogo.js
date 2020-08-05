@@ -208,7 +208,32 @@ function createPipes(){
                     pipeGroundX, pipeGroundY,
                     pipes.width, pipes.height,
                 );
+
+                pair.pipeSky = {
+                    x: pipeSkyX,
+                    y: pipes.height + pipeSkyY
+                }
+                pair.pipeGround = {
+                    x: pipeGroundX,
+                    y: pipeGroundY
+                } 
             });
+        },
+        hasCollisionWithFlappyBird(pair){
+            const flappyBirdHead = globais.flappyBird.y;
+            const flappyBirdFoot = globais.flappyBird.y + globais.flappyBird.height;
+
+            if(globais.flappyBird.x >= pair.x ){
+
+                if(flappyBirdHead <= pair.pipeSky.y){
+                    return true;
+                }
+
+                if(flappyBirdFoot >= pair.pipeGround.y){
+                    return true;
+                }
+            }
+            return false;
         },
         pairs: [],
         update(){
@@ -223,6 +248,11 @@ function createPipes(){
 
             pipes.pairs.forEach(function(pair){
                 pair.x = pair.x - 2;
+
+                if(pipes.hasCollisionWithFlappyBird(pair)){
+                    hit_sound.play();
+                    changeScreen(Screens.START);
+                }
 
                 if(pair.x + pipes.width <= 0){
                     pipes.pairs.shift();
@@ -254,9 +284,8 @@ const Screens = {
         },
         draw(){
             background.draw();
-            //messageGetReady.draw();
+            messageGetReady.draw();
             globais.flappyBird.draw();
-            globais.pipes.draw();
             globais.ground.draw();
         },
         click(){
@@ -264,7 +293,6 @@ const Screens = {
         },
         update(){
             globais.ground.update();
-            globais.pipes.update();
         }
     }
 };
@@ -272,6 +300,7 @@ const Screens = {
 Screens.GAME = {
     draw(){
         background.draw();
+        globais.pipes.draw();
         globais.ground.draw();
         globais.flappyBird.draw();
     },
@@ -279,6 +308,8 @@ Screens.GAME = {
         globais.flappyBird.jump();
     },
     update(){
+        globais.pipes.update();
+        globais.ground.update();
         globais.flappyBird.update();
     }
 };
